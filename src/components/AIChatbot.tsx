@@ -3,7 +3,18 @@ import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence } from "motion/react";
 import { Send, User, Bot, X, MessageCircle } from "lucide-react";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiClient: GoogleGenAI | null = null;
+
+const getAIClient = () => {
+  if (aiClient) return aiClient;
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'undefined' || apiKey === '"MY_GEMINI_API_KEY"') {
+    console.warn("GEMINI_API_KEY is missing or invalid. AI Chatbot will be disabled.");
+    return null;
+  }
+  aiClient = new GoogleGenAI(apiKey);
+  return aiClient;
+};
 
 interface Message {
   role: 'user' | 'model';
@@ -36,16 +47,20 @@ export const AIChatbot = () => {
     setIsLoading(true);
 
     try {
+      const client = getAIClient();
+      if (!client) {
+        setMessages(prev => [...prev, { role: 'model', text: "抱歉，目前系統尚未設定 AI 金鑰。您可以直接透過 Email 聯繫家論：f132100366@gmail.com" }]);
+        return;
+      }
+
       const history = messages.map(m => ({
         role: m.role,
         parts: [{ text: m.text }]
       }));
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [...history, { role: 'user', parts: [{ text: input }] }],
-        config: {
-          systemInstruction: `你現在是「李家論 (Li Jialun)」的個人 AI 助手。
+      const model = client.getGenerativeModel({
+        model: "gemini-1.5-flash", 
+        systemInstruction: `你現在是「李家論 (Li Jialun)」的個人 AI 助手。
           你的目標是向潛在雇主或合作夥伴介紹家論。
           
           家論的背景資訊：
@@ -62,10 +77,15 @@ export const AIChatbot = () => {
           - 專業、親切、充滿自信。
           - 回答要簡潔有力，並引導用戶查看作品集或預約面試。
           - 如果用戶詢問非家論相關的問題，請禮貌地將話題引導回他的專業領域。`,
-        }
       });
 
-      const modelText = response.text || "抱歉，我現在無法回應。請稍後再試。";
+      const chat = model.startChat({
+        history: history.filter(h => h.role === 'user' || h.role === 'model'),
+      });
+
+      const result = await chat.sendMessage(input);
+      const response = await result.response;
+      const modelText = response.text();
       setMessages(prev => [...prev, { role: 'model', text: modelText }]);
     } catch (error) {
       console.error("Gemini API Error:", error);

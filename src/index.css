@@ -6,30 +6,30 @@
   --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
-  --color-brand-bg: #0F0F0F;
-  --color-brand-accent: #E67E22;
+  --color-brand-bg: #0A0A0A;
+  --color-brand-accent: #F27D26;
   --color-brand-text: #F5F5F5;
-  --color-brand-muted: #888888;
+  --color-brand-muted: #A1A1AA;
 }
 
 @layer base {
   body {
-    @apply bg-brand-bg text-brand-text font-sans antialiased;
+    @apply bg-brand-bg text-brand-text font-sans antialiased overflow-x-hidden;
   }
 }
 
 .editorial-grid {
-  @apply grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] min-h-screen;
+  @apply grid grid-cols-1 lg:grid-cols-[1.2fr_1.8fr] min-h-screen;
 }
 
-.text-serif {
-  @apply font-serif;
+.star-item {
+  @apply border-l border-white/10 pl-4 py-2 transition-all duration-300 hover:border-brand-accent;
 }
 
-.border-accent {
-  @apply border-brand-accent;
+.skill-tag {
+  @apply text-[10px] font-mono px-3 py-1 border border-white/10 rounded-full text-white/50 uppercase tracking-widest hover:border-brand-accent hover:text-brand-accent transition-colors cursor-default;
 }
 
-.text-muted {
-  @apply text-brand-muted;
+.section-label {
+  @apply text-[10px] font-mono text-brand-accent uppercase tracking-[0.4em] mb-4 block;
 }
